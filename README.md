@@ -94,24 +94,246 @@ venv\Scripts\activate  # Windows
 # Install dependencies
 pip install -r requirements.txt
 
-# Run migrations
-alembic upgrade head
+## 📚 API Documentation
 
-# Start development server
-uvicorn app.main:app --reload
+### Authentication Endpoints
+
+#### Google OAuth Login
+```bash
+GET /api/v1/auth/login/google
+```
+Redirects to Google OAuth consent page.
+
+#### OAuth Callback
+```bash
+GET /api/v1/auth/callback/google
+```
+Handles OAuth callback and returns JWT tokens.
+
+**Response:**
+```json
+{
+  "access_token": "eyJhbGc...",
+  "refresh_token": "eyJhbGc...",
+  "token_type": "bearer",
+  "expires_in": 900
+}
 ```
 
-### Running Tests
+#### Refresh Token
+```bash
+POST /api/v1/auth/refresh
+Content-Type: application/json
 
+{
+  "refresh_token": "eyJhbGc..."
+}
+```
+
+#### Get Current User
+```bash
+GET /api/v1/auth/me
+Authorization: Bearer <access_token>
+```
+
+**Response:**
+```json
+{
+  "id": "uuid",
+  "email": "user@example.com",
+  "full_name": "John Doe",
+  "role": "user",
+  "is_active": true,
+  "created_at": "2024-01-01T00:00:00"
+}
+```
+
+#### Logout
+```bash
+POST /api/v1/auth/logout
+Authorization: Bearer <access_token>
+```
+
+---
+
+### Product Endpoints
+
+#### List Products
+```bash
+GET /api/v1/products?category=Vegetables&min_price=2.00&max_price=5.00&sort_by=price&sort_order=asc&limit=20
+```
+
+**Query Parameters:**
+- `category` (optional): Filter by category
+- `min_price` (optional): Minimum price filter
+- `max_price` (optional): Maximum price filter
+- `availability` (optional): Filter by availability (true/false)
+- `search` (optional): Search in name and description
+- `sort_by` (optional): Sort field (name, price, created_at)
+- `sort_order` (optional): Sort order (asc, desc)
+- `limit` (optional): Page size (1-100, default: 20)
+- `cursor` (optional): Pagination cursor
+
+**Response:**
+```json
+{
+  "products": [
+    {
+      "id": "uuid",
+      "name": "Organic Tomatoes",
+      "description": "Fresh organic tomatoes",
+      "price": "3.99",
+      "category": "Vegetables",
+      "stock_quantity": 150,
+      "availability": true,
+      "image_url": "https://example.com/image.jpg",
+      "created_at": "2024-01-01T00:00:00",
+      "updated_at": "2024-01-01T00:00:00"
+    }
+  ],
+  "total": 1,
+  "page_size": 20,
+  "cursor": "eyJpZCI6IjEyMyIsInZhbHVlIjoiMjAyNC0wMS0wMSJ9",
+  "has_more": false
+}
+```
+
+#### Get Product
+```bash
+GET /api/v1/products/{product_id}
+```
+
+#### Create Product (Admin Only)
+```bash
+POST /api/v1/products
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+{
+  "name": "Fresh Spinach",
+  "description": "Organic baby spinach",
+  "price": 3.99,
+  "category": "Vegetables",
+  "stock_quantity": 100,
+  "availability": true,
+  "image_url": "https://example.com/spinach.jpg"
+}
+```
+
+#### Update Product (Admin Only)
+```bash
+PUT /api/v1/products/{product_id}
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+{
+  "price": 4.99,
+  "stock_quantity": 80
+}
+```
+
+#### Delete Product (Admin Only)
+```bash
+DELETE /api/v1/products/{product_id}
+Authorization: Bearer <admin_token>
+```
+
+---
+
+### Health Check Endpoints
+
+#### Basic Health
+```bash
+GET /api/v1/health
+```
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-01T00:00:00"
+}
+```
+
+#### Detailed Health
+```bash
+GET /api/v1/health/detailed
+```
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-01T00:00:00",
+  "services": {
+    "database": {
+      "status": "healthy",
+      "message": "Database connection successful"
+    },
+    "cache": {
+      "status": "healthy",
+      "message": "Redis connection successful",
+      "stats": {
+        "hits": 1000,
+        "misses": 200,
+        "hit_rate": 83.33
+      }
+    },
+    "external_api": {
+      "status": "healthy",
+      "circuit_breaker": {
+        "name": "external_api",
+        "state": "closed",
+        "failure_count": 0,
+        "failure_threshold": 5
+      }
+    }
+  },
+  "system": {
+    "cpu_percent": 25.4,
+    "memory_percent": 62.1,
+    "disk_percent": 45.8
+  }
+}
+```
+
+#### Readiness Probe
+```bash
+GET /api/v1/health/ready
+```
+
+#### Liveness Probe
+```bash
+GET /api/v1/health/live
+```
+
+---
+
+## 🧪 Testing
+
+### Run All Tests
+```bash
+docker-compose exec app pytest -v
+```
+
+### Run Specific Test Suite
 ```bash
 # Unit tests
-pytest tests/unit/ -v
+docker-compose exec app pytest tests/unit/ -v
 
 # Integration tests
-pytest tests/integration/ -v
+docker-compose exec app pytest tests/integration/ -v
 
-# With coverage
-pytest --cov=app --cov-report=html
+# E2E tests
+docker-compose exec app pytest tests/e2e/ -v
+
+# Performance tests
+docker-compose exec app pytest tests/performance/ -v -s
+```
+
+### Test Coverage
+```bash
+docker-compose exec app pytest --cov=app --cov-report=html
 ```
 
 ### Load Testing
