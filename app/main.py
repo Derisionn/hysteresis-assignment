@@ -2,7 +2,8 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1 import auth, products
+from app.api.v1 import auth, products, health
+from app.middleware.rate_limit import RateLimitMiddleware
 
 app = FastAPI(
     title="FarmLokal API",
@@ -21,7 +22,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Rate limiting middleware
+app.add_middleware(
+    RateLimitMiddleware,
+    requests_per_minute=60,
+    requests_per_hour=1000
+)
+
 # Include routers
+app.include_router(health.router, prefix="/api/v1")
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(products.router, prefix="/api/v1")
 
