@@ -122,12 +122,54 @@ locust -f tests/load/test_products.py --host=http://localhost:8000
 
 ## 🔐 OAuth Setup (Google)
 
+### Step 1: Create Google Cloud Project
+
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing
-3. Enable Google+ API
-4. Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client ID"
-5. Add authorized redirect URI: `http://localhost:8000/api/v1/auth/callback/google`
-6. Copy Client ID and Client Secret to `.env`
+2. Click "Select a project" → "New Project"
+3. Enter project name (e.g., "FarmLokal Backend")
+4. Click "Create"
+
+### Step 2: Enable Google+ API
+
+1. In the left sidebar, go to "APIs & Services" → "Library"
+2. Search for "Google+ API"
+3. Click on it and press "Enable"
+
+### Step 3: Create OAuth 2.0 Credentials
+
+1. Go to "APIs & Services" → "Credentials"
+2. Click "Create Credentials" → "OAuth 2.0 Client ID"
+3. If prompted, configure OAuth consent screen:
+   - User Type: External
+   - App name: FarmLokal
+   - User support email: your email
+   - Developer contact: your email
+   - Click "Save and Continue"
+4. Application type: Web application
+5. Name: FarmLokal Backend
+6. Authorized redirect URIs:
+   - Add: `http://localhost:8000/api/v1/auth/callback/google`
+   - For production, add your production URL
+7. Click "Create"
+
+### Step 4: Configure Environment Variables
+
+1. Copy the Client ID and Client Secret
+2. Open `.env` file (copy from `.env.example` if needed)
+3. Update:
+   ```env
+   GOOGLE_CLIENT_ID=your-client-id-here.apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=your-client-secret-here
+   ```
+
+### Step 5: Test OAuth Flow
+
+1. Start the application: `docker-compose up`
+2. Visit: http://localhost:8000/api/v1/auth/login/google
+3. You should be redirected to Google login
+4. After login, you'll receive JWT tokens
+
+---
 
 ## 📊 Architecture
 
